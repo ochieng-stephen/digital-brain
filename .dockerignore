@@ -1,0 +1,14 @@
+# Keep the backend build context small — only pyproject/uv.lock/README/src are COPYed anyway.
+ui/
+.venv/
+**/__pycache__/
+**/*.pyc
+.git/
+.claude/
+tasks/
+design/
+examples/
+*.png
+*.jpeg
+.python-version
+demo.py

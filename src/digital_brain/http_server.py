@@ -370,7 +370,28 @@ app = Starlette(
 )
 
 
+def _ensure_seeded() -> None:
+    """On a fresh cloud deploy the database is empty. Create the schema and seed both demo
+    brains exactly once — guarded on an empty engrams table so restarts/redeploys are no-ops
+    (and never wipe accumulated state). Seeding embeds text, so this also warms the model."""
+    from .store import Store
+
+    s = Store()
+    try:
+        s.init_schema()  # CREATE EXTENSION/TABLE IF NOT EXISTS — idempotent
+        n = s.conn.execute("SELECT count(*) AS n FROM engrams").fetchone()["n"]
+    finally:
+        s.close()
+    if n == 0:
+        seed.load(reset=True).close()
+        seed_legal.load(reset=False).close()
+
+
 def main() -> None:
-    host = os.environ.get("DIGITAL_BRAIN_HTTP_HOST", "127.0.0.1")
-    port = int(os.environ.get("DIGITAL_BRAIN_HTTP_PORT", "8787"))
+    # Railway (and most PaaS) inject $PORT and expect the app to bind 0.0.0.0; locally we keep
+    # the loopback default so nothing else on the machine can reach the dev bridge.
+    on_paas = bool(os.environ.get("PORT"))
+    port = int(os.environ.get("PORT") or os.environ.get("DIGITAL_BRAIN_HTTP_PORT", "8787"))
+    host = os.environ.get("DIGITAL_BRAIN_HTTP_HOST", "0.0.0.0" if on_paas else "127.0.0.1")
+    _ensure_seeded()
     uvicorn.run(app, host=host, port=port, log_level="warning")
