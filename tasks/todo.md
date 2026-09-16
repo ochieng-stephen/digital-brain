@@ -30,5 +30,19 @@
 - [ ] Live Vercel URL: think / recall / memories all hit the Railway backend.
 - [ ] Push a trivial commit → both auto-deploy.
 
-## Review
-(to fill in)
+## Review — DONE (2026-09-16)
+Live: frontend **https://digital-brain-ten.vercel.app** → `/api/*` rewrite →
+backend **https://digital-brain-api-production.up.railway.app** → Railway Postgres (pgvector).
+
+- Backend: Railway project `digital-brain`, service `digital-brain-api` (Dockerfile, uv), Postgres
+  with pgvector. `DATABASE_URL` referenced from the Postgres service. Seeds both demo brains on
+  first boot (idempotent). Verified: /health (26 engrams), /brains, /memories, POST /think (vector
+  recall). Deploys via `railway up` today.
+- Frontend: Vercel project `digital-brain` (Vite, root `ui/`), GitHub-connected (push-to-deploy).
+  `ui/vercel.json` rewrites `/api/*` to the backend. Live app renders with 0 console errors.
+- Code changes: http_server binds 0.0.0.0/$PORT on PaaS; _ensure_seeded() creates the `vector`
+  extension before register_vector, then seeds; Dockerfile + .dockerignore + railway.json.
+
+### Remaining (owner: user, browser-gated)
+- Railway → connect GitHub repo for push-to-deploy (CLI repo-link returned Unauthorized).
+- (done) Vercel SSO protection disabled so production is public.
