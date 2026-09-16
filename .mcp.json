@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "digital-brain": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Volumes/DevDrive/dev/projects/active/Agentic-Unit-Machines/digital-brain",
+        "digital-brain-mcp"
+      ],
+      "env": {
+        "DATABASE_URL": "postgresql:///digital_brain"
+      }
+    }
+  }
+}

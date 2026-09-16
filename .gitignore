@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Node / build output
+node_modules/
+dist/
+
+# Local tooling & OS
+.claude/
+.DS_Store
+
+# Dev iteration screenshots (not referenced by the README)
+/*.png

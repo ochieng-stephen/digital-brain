@@ -1,0 +1,2257 @@
+/* ============================================================================
+   Digital Brain — design system (LIGHT)
+   White canvas · dark brain (true to the reference art) · crisp hairlines ·
+   one restrained accent per domain (teal-cyan / amber-bronze — no violet).
+   Near-monochrome, architectural, premium.
+   ============================================================================ */
+
+:root {
+  --bg-0: #f2f3f5; /* soft light frame */
+  --bg-1: #f8f9fb;
+  --paper: #ffffff;
+
+  --panel: #ffffff;
+  --panel-2: #fcfcfd;
+  --hair: rgba(15, 20, 30, 0.09);
+  --hair-2: rgba(15, 20, 30, 0.16);
+
+  --ink: #0b0d12; /* near-black — text + brain */
+  --ink-2: #4a515c;
+  --ink-3: #6b7280; /* quiet labels — kept ≥4.5:1 on white for AA */
+
+  /* neural accent — overridden per domain by React (inline on .app) */
+  --accent-a: #0891b2;
+  --accent-b: #0e7490;
+  --accent: color-mix(in oklab, var(--accent-a), var(--accent-b));
+  --accent-wash: color-mix(in oklab, var(--accent-a) 12%, transparent);
+
+  --ok: #059669;
+  --warn: #d97706;
+  --bad: #dc2626;
+
+  --energy: 0.34;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+  --r-lg: 20px;
+  --r-md: 14px;
+  --r-sm: 9px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --shadow-panel: 0 1px 2px rgba(15, 20, 30, 0.04), 0 18px 40px -26px rgba(15, 20, 30, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--bg-0);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+  overflow-x: hidden;
+}
+::selection {
+  background: color-mix(in oklab, var(--accent-a) 22%, transparent);
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+input,
+textarea {
+  font: inherit;
+}
+
+/* one branded focus ring for every interactive element (keyboard users especially) */
+:where(button, input, textarea, a, [tabindex]):focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent-a) 75%, transparent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+.tick {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ app shell */
+.app {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+/* airy light atmosphere: soft white bloom + a whisper of accent behind the brain */
+.app::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(140% 100% at 50% -20%, #ffffff, var(--bg-0) 55%),
+    radial-gradient(52% 44% at 50% 46%, var(--accent-wash), transparent 72%);
+}
+/* faint paper grain for tactility (multiply keeps it subtle on white) */
+.app::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------------------------ top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px clamp(16px, 3vw, 40px);
+}
+.topbar-lead {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.brandmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-name {
+  font-weight: 640;
+  letter-spacing: -0.01em;
+  font-size: 16px;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+/* logomark — the actual pen-and-ink brain⇄chip drawing, keyed to transparency (no square
+   background). It reads as two materials, mirroring the app's "organic → silicon" idea. Rather than
+   stack two masked layers (which bleed, because the drawing's hatching is semi-transparent and a
+   partly-opaque ink layer can't fully hide the accent beneath it), the fill is a SINGLE two-tone
+   background painted through the art mask:
+   • left of the ~0.49 seam → --ink (raw drawing ink, same as the wordmark) — the ORGANIC half;
+   • right of the seam → the domain accent gradient (--accent-a/--accent-b, set per brain in
+     App.tsx) — teal for medicine, amber-bronze for legal — the SILICON half.
+   A short feather at the seam lets the ink dissolve into the accent at the membrane. */
+.brandmark-logo {
+  width: 39px;
+  height: 44px;
+  flex: none;
+  background: linear-gradient(
+    90deg,
+    var(--ink) 0 46%,
+    var(--accent-a) 53%,
+    var(--accent-b) 100%
+  );
+  -webkit-mask: url(/brain-logo.png) center / contain no-repeat;
+  mask: url(/brain-logo.png) center / contain no-repeat;
+  filter: drop-shadow(0 1px 1.5px rgba(11, 13, 18, 0.24));
+  transition: transform 0.3s var(--ease);
+}
+.brandmark-logo:hover {
+  transform: translateY(-1px) scale(1.05);
+}
+/* not live (no backend connection): the colour drains from the silicon half to neutral grey,
+   leaving the organic ink half intact — a quiet, always-on connection indicator. */
+.brandmark-logo[data-live="false"] {
+  background: linear-gradient(90deg, var(--ink) 0 46%, #a9afb8 53%, #c4c8cf 100%);
+  filter: drop-shadow(0 1px 1.5px rgba(11, 13, 18, 0.14));
+}
+/* still reaching the brain */
+.brandmark-logo.connecting {
+  animation: logobreathe 1.6s var(--ease) infinite;
+}
+@keyframes logobreathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brandmark-logo {
+    transition: background 0.5s var(--ease), filter 0.5s var(--ease);
+  }
+  .brandmark-logo:hover {
+    transform: none;
+  }
+  .brandmark-logo.connecting {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ------------------------------------------------------------------ stage */
+/* the workspace fills the viewport below the header: a full-height Recall rail on the left, and
+   everything else (brain + scaffold, then plasticity, think console, audit) stacked to its right. */
+.workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: clamp(14px, 1.8vw, 28px);
+  padding: 6px clamp(16px, 3vw, 40px) 10px;
+}
+.rail {
+  flex: 0 0 clamp(300px, 25vw, 384px);
+  min-width: 0;
+  min-height: 0;
+}
+.workspace-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vw, 18px);
+}
+.stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.94fr);
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 30px);
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  align-self: stretch;
+  justify-content: flex-start;
+}
+.rail,
+.col-right {
+  align-items: stretch;
+}
+/* the rail's Recall panel fills the full column height; its memory list is the scroll region */
+.rail .panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.brain-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 340px;
+  padding: 20px 24px 22px;
+}
+/* segmented control to swap the centre between the brain art and the memory-wiring graph */
+.center-toggle {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  background: color-mix(in oklab, var(--panel) 82%, transparent);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(6px);
+}
+.center-toggle button {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 5px 15px;
+  border-radius: 999px;
+  transition: color 0.25s var(--ease), background 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.center-toggle button:hover {
+  color: var(--ink);
+}
+.center-toggle button[data-on="true"] {
+  color: #fff;
+  background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
+  box-shadow: 0 6px 16px -8px color-mix(in oklab, var(--accent-a) 70%, transparent);
+}
+/* the view itself fills the remaining slot; the brain art centres, the graph scales to fill */
+.center-view {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* bright stage pool so the brain sits on light, like the reference */
+.brain-stage::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 62%;
+  height: 56%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0) 68%);
+  filter: blur(10px);
+  z-index: 0;
+}
+
+/* ------------------------------------------------------------------ panel */
+.panel {
+  width: 100%;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-panel);
+  padding: 16px 16px 15px;
+  transition: border-color 0.35s var(--ease), transform 0.35s var(--ease),
+    box-shadow 0.35s var(--ease);
+}
+.panel:hover {
+  border-color: var(--hair-2);
+  box-shadow: 0 1px 2px rgba(15, 20, 30, 0.05), 0 22px 48px -26px rgba(15, 20, 30, 0.4);
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* wrap + row-gap so a content-heavy head (e.g. the scaffold's title + brain tick + copy button +
+     cycle id) drops its actions to a second row on a narrow column instead of overflowing and
+     forcing a horizontal scrollbar */
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+.panel-title {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0; /* allow the title to shrink rather than push the head past its container */
+}
+.panel-title h3 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 640;
+  letter-spacing: 0.01em;
+}
+.side-note {
+  font-size: 11px;
+  color: var(--ink-3);
+  max-width: 30ch;
+}
+
+.pill {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  color: var(--ink-2);
+  background: var(--bg-1);
+}
+
+/* ------------------------------------------------------------------ memory nodes */
+.mem {
+  padding: 9px 11px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease);
+  cursor: default;
+}
+.mem:hover,
+.mem.lit {
+  background: var(--bg-1);
+  border-color: var(--hair);
+}
+.mem.lit {
+  border-color: color-mix(in oklab, var(--accent-a) 45%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent-a) 20%, transparent) inset;
+}
+/* the category's first letter, boxed inline — replaces the old isolated leading badge. It tells a
+   small story: a dormant memory reads as an ENGRAVED key (letterpressed, recessed), and when the
+   memory is recalled the same key becomes a tiny LIT LOBE drawn in the app's own pen-and-ink
+   language — fine ink hatching over warm paper with the accent glowing from within, bounded by a
+   hand-inked edge (never a glossy chip). */
+.kind-cap {
+  display: inline-block;
+  /* right side hugs the letter so it flows into the word with the text's natural spacing; the
+     freed room moves to the left, keeping the tile balanced around the initial */
+  padding: 2px 1px 2px 5px;
+  margin-right: 1px;
+  border-radius: 3.5px;
+  color: var(--ink-2);
+  font-size: inherit; /* == the category text, so the boxed letter shares its baseline */
+  line-height: 1;
+  letter-spacing: 0;
+  /* dormant drawn key: the SAME fine pen hatching as the lit state but rendered in toned-down
+     graphite (no accent), over a faint top-lit paper wash, with a crisp inked hairline ring, an
+     inset top highlight + a whisper of drop. Hatch angle/pitch match the lit state exactly, so
+     lighting up just floods the existing strokes with accent ink rather than redrawing them. */
+  background: repeating-linear-gradient(
+      -45deg,
+      color-mix(in oklab, var(--ink) 26%, transparent) 0 0.7px,
+      transparent 0.7px 2.5px
+    ),
+    linear-gradient(180deg, color-mix(in oklab, var(--ink) 4%, transparent), color-mix(in oklab, var(--ink) 10%, transparent));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 0 0 1px color-mix(in oklab, var(--ink) 13%, transparent),
+    0 1px 1.5px -0.5px rgba(15, 20, 30, 0.12);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: color 0.3s var(--ease), background 0.3s var(--ease), box-shadow 0.3s var(--ease),
+    text-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.mem.lit .kind-cap {
+  /* activated = a drawn "lit lobe": deep-ink letter, fine diagonal pen hatching over a warm paper
+     wash, the accent glowing from within (radial), a hand-inked edge and a soft accent halo — the
+     same ink-on-paper-with-accent-glow vocabulary as the central brain art, not a glossy fill */
+  color: color-mix(in oklab, var(--accent-b) 26%, var(--ink));
+  background: repeating-linear-gradient(
+      -45deg,
+      color-mix(in oklab, color-mix(in oklab, var(--accent-b) 64%, var(--ink)) 60%, transparent) 0 0.7px,
+      transparent 0.7px 2.5px
+    ),
+    radial-gradient(
+      130% 125% at 50% 26%,
+      color-mix(in oklab, var(--accent-a) 30%, #fdfaf3) 0%,
+      color-mix(in oklab, var(--accent-a) 22%, #f6eede) 48%,
+      color-mix(in oklab, var(--accent-b) 16%, #efe6d3) 100%
+    );
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent-a) 44%, var(--ink)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 1px 7px -2px color-mix(in oklab, var(--accent-a) 52%, transparent);
+  text-shadow: 0 1px 0 rgba(255, 253, 248, 0.55);
+  transform: scale(1.05);
+  /* ink bloom: on recall the dormant graphite key "develops" — desaturated and small for an
+     instant, then the accent ink floods in with a soft halo flare before settling */
+  animation: kindbloom 0.52s var(--ease) both;
+}
+@keyframes kindbloom {
+  0% {
+    transform: scale(0.9);
+    filter: saturate(0.35) brightness(1.12);
+  }
+  52% {
+    transform: scale(1.08);
+    filter: saturate(1.14) brightness(1) drop-shadow(0 0 5px color-mix(in oklab, var(--accent-a) 42%, transparent));
+  }
+  100% {
+    transform: scale(1.05);
+    filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mem.lit .kind-cap {
+    animation: none;
+  }
+}
+.mem-label {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 580;
+  letter-spacing: -0.005em;
+}
+.mem-detail {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  line-height: 1.35;
+  margin-top: 1px;
+}
+.mem-kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 3px;
+}
+.mem-kind-label {
+  min-width: 0;
+  overflow-wrap: anywhere; /* long region tokens break instead of forcing horizontal overflow */
+}
+/* recall track-record: a memory's success rate over judged recalls. Shown only past the evidence
+   gate (≥3 outcomes) — exactly when the brain starts weighting it. A reliable memory glows with the
+   domain accent; a chronically-unhelpful one is drained to grey (mirrors its recall down-weight). */
+.mem-rel {
+  margin-left: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: default;
+}
+.mem-rel-track {
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--ink) 13%, transparent);
+  overflow: hidden;
+}
+.mem-rel-fill {
+  display: block;
+  height: 100%;
+  width: calc(var(--rel, 0) * 100%);
+  min-width: 2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+  transition: width 0.5s var(--ease), background 0.3s var(--ease);
+}
+.mem-rel[data-lo="true"] .mem-rel-fill {
+  background: color-mix(in oklab, var(--ink) 42%, transparent);
+}
+.mem-rel-n {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.mem-rel[data-lo="true"] .mem-rel-n {
+  color: color-mix(in oklab, var(--ink) 46%, transparent);
+}
+.mem-body {
+  min-width: 0;
+}
+.mem-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mem-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 1; /* always reachable — critical on touch, where there is no hover */
+  transition: opacity 0.2s var(--ease);
+}
+/* only devices that can actually hover get the quiet hide-until-hover behavior */
+@media (hover: hover) {
+  .mem-actions {
+    opacity: 0;
+  }
+  .mem:hover .mem-actions,
+  .mem:focus-within .mem-actions {
+    opacity: 1;
+  }
+}
+.mem-btn {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1;
+  transition: all 0.15s var(--ease);
+}
+.mem-btn:hover {
+  color: var(--ink);
+  background: var(--hair);
+}
+/* ---------------------------------------------------------------------------------------------
+   One reusable instant tooltip for ANY element with [data-tip] (native `title` has a ~1s delay).
+   Fades in + slides up, snug padding, dark pill + caret. Add data-tip-pos="bottom" for elements
+   near the top of the page (header) so the tooltip drops below instead of clipping off-screen.
+   --------------------------------------------------------------------------------------------- */
+[data-tip] {
+  position: relative;
+}
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  /* own font/casing so the tooltip is identical regardless of the host element's text styling
+     (e.g. the rewind button is mono + uppercase — the tooltip must not inherit that) */
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  white-space: normal; /* don't inherit a host's nowrap — long tooltips must wrap within max-width */
+  width: max-content;
+  max-width: 240px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+  box-shadow: 0 4px 12px -4px rgba(15, 20, 30, 0.4);
+  transition: opacity 0.12s var(--ease), transform 0.12s var(--ease);
+}
+[data-tip]::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.12s var(--ease);
+}
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+[data-tip]:hover::before,
+[data-tip]:focus-visible::before {
+  opacity: 1;
+}
+/* below-variant (header / top-of-page elements) */
+[data-tip-pos="bottom"]::after {
+  bottom: auto;
+  top: calc(100% + 6px);
+  transform: translateX(-50%) translateY(-3px);
+}
+[data-tip-pos="bottom"]::before {
+  bottom: auto;
+  top: calc(100% + 2px);
+  border-top-color: transparent;
+  border-bottom-color: var(--ink);
+}
+[data-tip-pos="bottom"]:hover::after,
+[data-tip-pos="bottom"]:focus-visible::after {
+  transform: translateX(-50%) translateY(0);
+}
+/* right-aligned variant for elements near the right viewport edge (tooltip opens inward) */
+[data-tip-align="right"]::after {
+  left: auto;
+  right: 0;
+  transform: translateY(3px);
+}
+[data-tip-align="right"]::before {
+  left: auto;
+  right: 14px;
+  transform: none;
+}
+[data-tip-align="right"]:hover::after,
+[data-tip-align="right"]:focus-visible::after {
+  transform: translateY(0);
+}
+.mem-edit textarea {
+  width: 100%;
+  margin-top: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--hair-2);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  resize: vertical;
+  outline: none;
+}
+.mem-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.mem-explain {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hair);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.mem-explain ul {
+  margin: 6px 0 0;
+  padding-left: 14px;
+  color: var(--ink-3);
+}
+.mem-explain li {
+  margin-bottom: 2px;
+}
+
+.mem-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mem-add input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-1);
+  color: var(--ink);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s var(--ease);
+}
+.mem-add input:focus {
+  border-color: color-mix(in oklab, var(--accent-a) 55%, var(--hair));
+}
+
+.hint {
+  color: var(--ink-3);
+  font-size: 11.5px;
+  margin: 0 2px 10px;
+  line-height: 1.4;
+}
+
+.mem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* cap growth so a long memory list scrolls in place instead of stretching the whole page.
+     viewport-relative + a hard ceiling keeps the layout stable on any screen. */
+  max-height: min(50vh, 560px);
+  overflow-y: auto;
+  overflow-x: clip; /* cards fit the width; never show a horizontal scrollbar */
+  scroll-padding-block: 6px;
+}
+
+/* one premium internal-scroll treatment, shared by every list that grows with data — so scrolling
+   feels identical across the app: a thin, quiet thumb that warms to the accent on hover, a stable
+   gutter so content never shifts as the bar appears, and contained overscroll so the page stays put. */
+.mem-list,
+.review-list {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hair-2) transparent;
+}
+.mem-list::-webkit-scrollbar,
+.review-list::-webkit-scrollbar {
+  width: 10px;
+}
+.mem-list::-webkit-scrollbar-track,
+.review-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mem-list::-webkit-scrollbar-thumb,
+.review-list::-webkit-scrollbar-thumb {
+  background: var(--hair-2);
+  border-radius: 999px;
+  border: 3px solid transparent; /* inset the thumb so it reads as a slim pill with breathing room */
+  background-clip: padding-box;
+  transition: background 0.2s var(--ease);
+}
+.mem-list:hover::-webkit-scrollbar-thumb,
+.review-list:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--accent-a) 42%, var(--hair-2));
+  background-clip: padding-box;
+}
+
+.review-queue {
+  margin-top: 4px;
+}
+.review-list {
+  max-height: min(30vh, 320px);
+  overflow-y: auto;
+}
+.review-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--hair-2);
+  margin-bottom: 6px;
+}
+.review-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn.small {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  border-radius: 8px;
+}
+
+.reflect-callout {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--accent-a) 30%, var(--hair));
+  background: color-mix(in oklab, var(--accent-a) 7%, transparent);
+  animation: reveal 0.4s var(--ease);
+}
+.reflect-steps {
+  width: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--hair-2);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  resize: vertical;
+  outline: none;
+}
+.reflect-steps::placeholder {
+  color: var(--ink-3);
+}
+.reflect-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.reflect-copy b {
+  font-size: 12.5px;
+  font-weight: 620;
+}
+.reflect-copy span {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.reflect-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+.reflect-done {
+  margin: 12px 2px 0;
+  font-size: 12px;
+  color: var(--ok);
+}
+
+/* ---- iteration 9: capability surfaces ---- */
+
+/* standalone recall (introspection) search */
+.mem-search {
+  position: relative;
+  margin-bottom: 10px;
+}
+.mem-search input {
+  width: 100%;
+  background: var(--bg-1);
+  color: var(--ink);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s var(--ease);
+}
+.mem-search input:focus {
+  border-color: color-mix(in oklab, var(--accent-a) 55%, var(--hair));
+}
+.mem-search-count {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+/* "surfaced by association" marker + explain associations */
+.via-assoc {
+  margin-left: 7px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 999px;
+  color: var(--accent-b);
+  background: color-mix(in oklab, var(--accent-a) 12%, transparent);
+  vertical-align: middle;
+}
+.mem-assoc {
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.assoc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  background: var(--bg-1);
+  color: var(--ink-2);
+  font-size: 10px;
+}
+.assoc-w {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent-b);
+}
+
+/* stakes toggle (fast/slow routing) */
+.stakes {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  background: var(--bg-1);
+  flex-shrink: 0;
+}
+.stakes-opt {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 580;
+  padding: 5px 11px;
+  border-radius: 999px;
+  transition: all 0.25s var(--ease);
+}
+.stakes-opt[data-on="true"] {
+  color: #fff;
+  background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
+}
+.stakes-note {
+  color: var(--ink-3);
+  font-size: 11px;
+}
+.stakes-note b {
+  color: var(--ink-2);
+  font-weight: 620;
+}
+
+/* fast/slow path badge under the brain */
+.path-fast {
+  color: var(--warn);
+}
+.path-slow {
+  color: var(--accent-b);
+}
+.path-novel {
+  color: var(--warn);
+  font-weight: 600;
+}
+.novel-note {
+  margin: 10px 0 2px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  border: 1px solid color-mix(in oklab, var(--warn) 40%, var(--hair));
+  background: color-mix(in oklab, var(--warn) 8%, transparent);
+}
+
+/* reset control in the audit ribbon */
+.reset-btn {
+  border: 1px solid var(--hair);
+  background: var(--paper);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s var(--ease);
+}
+.reset-btn:hover {
+  color: var(--bad);
+  border-color: color-mix(in oklab, var(--bad) 40%, var(--hair));
+}
+
+.promote-hint {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-b);
+  margin-top: 2px;
+}
+
+.queue-hint {
+  margin: 0 2px 10px;
+  font-size: 11px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.draft-help {
+  margin: 0 0 9px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.draft-help b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.draft-help .chip-suggest {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.scaffold-legend {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.scaffold-legend li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  align-items: start;
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.scaffold-legend b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.leg-glyph {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hair-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-b);
+  background: var(--bg-1);
+}
+
+.empty {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  padding: 8px 2px;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------ playbook */
+.playbook-name {
+  font-size: 15px;
+  font-weight: 640;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+.step {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 5px 0;
+  font-size: 12.5px;
+  color: var(--ink);
+  border-top: 1px solid var(--hair);
+}
+.step:first-of-type {
+  border-top: 0;
+}
+.step-n {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--accent-b);
+  padding-top: 1px;
+}
+
+/* constraints */
+.rule {
+  display: grid;
+  grid-template-columns: 8px 1fr;
+  gap: 9px;
+  padding: 7px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.rule-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-top: 5px;
+  background: var(--bad);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--bad) 55%, transparent);
+}
+.rule.soft .rule-dot {
+  background: var(--ink-3);
+  box-shadow: none;
+}
+.rule-layer {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-left: 6px;
+}
+
+/* ------------------------------------------------------------------ think console */
+.dock {
+  padding: 0; /* aligns with the stage; workspace provides the outer inset */
+}
+.console {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--hair-2);
+  background: var(--paper);
+  box-shadow: var(--shadow-panel);
+  transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.console:focus-within {
+  border-color: color-mix(in oklab, var(--accent-a) 60%, var(--hair-2));
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-a) 14%, transparent), var(--shadow-panel);
+}
+.console-glyph {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-b);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.console input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  font-size: 15px;
+  min-width: 0;
+}
+.console input::placeholder {
+  color: var(--ink-3);
+}
+.btn {
+  border: 1px solid var(--hair-2);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 9px 15px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 580;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: all 0.25s var(--ease);
+}
+.btn:hover {
+  border-color: transparent;
+  background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
+  color: #fff;
+  box-shadow: 0 8px 22px -8px color-mix(in oklab, var(--accent-a) 65%, transparent);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+.btn.ghost:hover {
+  background: var(--bg-1);
+  color: var(--ink);
+  box-shadow: none;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.console-hint {
+  margin: 8px 4px 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.chip-suggest {
+  border: 1px dashed var(--hair-2);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  transition: all 0.2s var(--ease);
+}
+.chip-suggest:hover {
+  border-style: solid;
+  border-color: var(--accent-a);
+  color: var(--ink);
+}
+
+/* verdict banner */
+.verdict {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  border: 1px solid var(--hair);
+  animation: reveal 0.4s var(--ease);
+}
+.verdict.pass {
+  border-color: color-mix(in oklab, var(--ok) 45%, transparent);
+  background: color-mix(in oklab, var(--ok) 8%, transparent);
+}
+.verdict.fail {
+  border-color: color-mix(in oklab, var(--bad) 45%, transparent);
+  background: color-mix(in oklab, var(--bad) 7%, transparent);
+}
+.verdict b {
+  font-weight: 660;
+}
+.verdict-list {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+/* ------------------------------------------------------------------ autonomy dial */
+.dial {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dial-track {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  background: var(--bg-1);
+}
+.dial-opt {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  font-weight: 580;
+  padding: 6px 13px;
+  border-radius: 999px;
+  transition: all 0.3s var(--ease);
+}
+.dial-opt[data-on="true"] {
+  color: #fff;
+  background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
+  box-shadow: 0 6px 16px -7px color-mix(in oklab, var(--accent-a) 70%, transparent);
+}
+.dial-opt[data-locked="true"] {
+  opacity: 0.4;
+}
+.dial-label {
+  text-align: right;
+}
+.dial-label .tick {
+  display: block;
+}
+.dial-label .lvl {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.trust-note {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  margin-top: 1px;
+}
+.btn.promote {
+  padding: 7px 13px;
+  font-size: 12px;
+  border-color: color-mix(in oklab, var(--accent-a) 55%, var(--hair-2));
+  color: var(--accent-b);
+  animation: reveal 0.4s var(--ease);
+}
+
+/* ------------------------------------------------------------------ domain switcher */
+.domains {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--hair);
+  background: var(--bg-1);
+}
+.domain-opt {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 580;
+  padding: 7px 14px;
+  border-radius: 9px;
+  transition: all 0.3s var(--ease);
+}
+.domain-opt[data-on="true"] {
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 1px 2px rgba(15, 20, 30, 0.06), inset 0 0 0 1px var(--hair);
+}
+
+/* ------------------------------------------------------------------ audit ribbon */
+.audit {
+  margin: 0; /* aligns with the stage; workspace-main gap provides spacing */
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: var(--shadow-panel);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  /* NOT overflow:hidden — that clipped the rewind tooltip. The chip row clips itself via
+     .audit-line's own overflow-x:auto, so the container can stay visible. */
+  overflow: visible;
+}
+.audit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.audit-line {
+  flex: 1;
+  min-width: 0; /* let the flex item shrink so its own overflow-x:auto scrolls the chips in place
+                   instead of growing to content width and pushing the whole page horizontally */
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.audit-line::-webkit-scrollbar {
+  display: none;
+}
+.event {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  background: var(--bg-1);
+  animation: reveal 0.4s var(--ease);
+}
+.event .dotk {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-a);
+  box-shadow: 0 0 6px color-mix(in oklab, var(--accent-a) 60%, transparent);
+}
+.event.k-check .dotk {
+  background: var(--ok);
+  box-shadow: 0 0 6px color-mix(in oklab, var(--ok) 60%, transparent);
+}
+.event.k-violation .dotk {
+  background: var(--bad);
+  box-shadow: 0 0 6px color-mix(in oklab, var(--bad) 60%, transparent);
+}
+.event .etime {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+.event.undone {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.rewind-btn {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 0 0 2px;
+  transition: color 0.15s var(--ease);
+}
+.rewind-btn:hover {
+  color: var(--accent-b);
+}
+.audit-empty {
+  color: var(--ink-3);
+  font-size: 11.5px;
+}
+
+/* ------------------------------------------------------------------ brain svg */
+.brain-svg {
+  position: relative;
+  z-index: 1;
+  width: min(56%, 300px);
+  height: auto;
+  overflow: visible;
+}
+.brain-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe calc(10s - var(--energy) * 3s) ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brain-breathe {
+    animation: none;
+  }
+}
+.chip-pulse {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.chip-active .chip-pulse {
+  opacity: 0.42;
+}
+/* recall: soft accent areas multiplied onto the drawing — the living memory map */
+.recall-layer {
+  mix-blend-mode: multiply;
+}
+/* a memory's cluster position — glides smoothly when the wiring re-flows the layout over time */
+.mem-region {
+  transition: transform 1.6s var(--ease);
+}
+.mem-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  /* opacity carries the activation LEVEL (resting baseline → lifted on recall/hover), transitioned so
+     a region fades gently in and out; fill-opacity is animated independently for the resting shimmer,
+     so the two never fight (final alpha = opacity × fill-opacity) */
+  transition: opacity 0.9s var(--ease);
+  animation: memshimmer 5s var(--ease) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mem-region {
+    transition: none;
+  }
+  .mem-glow {
+    animation: none;
+  }
+}
+/* circuit terminals: subtle idle firing, quicker with autonomy */
+.terminal {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: terminalfire;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  opacity: calc(0.3 + var(--energy) * 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .terminal {
+    animation: none;
+  }
+}
+.seam {
+  transition: stroke 0.35s var(--ease), stroke-width 0.35s var(--ease), filter 0.35s var(--ease);
+}
+.seam.pass {
+  stroke: var(--ok);
+  filter: drop-shadow(0 0 10px color-mix(in oklab, var(--ok) 65%, transparent));
+}
+.seam.violation {
+  stroke: var(--bad);
+  filter: drop-shadow(0 0 12px color-mix(in oklab, var(--bad) 65%, transparent));
+  animation: seamflare 0.7s var(--ease);
+}
+.brain-caption {
+  position: relative;
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+}
+.brain-caption .big {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.brain-caption .path {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-b);
+}
+
+/* ------------------------------------------------------------------ keyframes */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.016);
+  }
+}
+@keyframes recallbreathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+/* resting shimmer: a slow, subtle swell of each memory area's fill (independent of its activation
+   opacity) so the whole cortex looks faintly alive at idle, each region on its own phase */
+@keyframes memshimmer {
+  0%,
+  100% {
+    fill-opacity: 0.6;
+    transform: scale(0.97);
+  }
+  50% {
+    fill-opacity: 1;
+    transform: scale(1.03);
+  }
+}
+@keyframes seamflare {
+  0% {
+    stroke-width: 4;
+  }
+  40% {
+    stroke-width: 11;
+  }
+  100% {
+    stroke-width: 4;
+  }
+}
+@keyframes terminalfire {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15);
+  }
+}
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.reveal {
+  animation: reveal 0.45s var(--ease) both;
+}
+
+/* ------------------------------------------------------------------ live client */
+.app.offline,
+.app.loading {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+.offline-card,
+.loading-card {
+  text-align: center;
+  padding: 32px 36px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  box-shadow: var(--shadow-panel);
+  max-width: 440px;
+}
+.offline-card .brandmark-logo {
+  display: block;
+  margin: 0 auto 16px;
+}
+.offline-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.offline-card p {
+  color: var(--ink-2);
+  font-size: 13px;
+  margin: 8px 0;
+}
+.offline-card pre {
+  background: var(--bg-1);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  margin: 12px 0;
+}
+.offline-sub {
+  font-size: 11.5px !important;
+  color: var(--ink-3) !important;
+}
+.offline-card .btn {
+  margin-top: 8px;
+}
+.loading-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* plasticity graph — lives in the swappable centre slot; the SVG scales to fill it */
+.pgraph {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.pedge {
+  stroke: var(--ink-3);
+  transition: stroke 0.3s var(--ease), opacity 0.2s var(--ease);
+}
+.pedge.lit {
+  stroke: var(--accent-a);
+}
+.pedge.hovered {
+  stroke: var(--accent-b);
+}
+.pnode {
+  cursor: pointer;
+}
+/* inner group carries the lift/pulse so it never fights the node's translate */
+.pnode-inner {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.28s var(--ease);
+}
+.pnode.hovered .pnode-inner {
+  transform: scale(1.14);
+}
+.pnode.on .pnode-inner {
+  animation: recallbreathe 2.6s var(--ease) infinite;
+}
+.pnode-dot {
+  stroke: var(--hair-2);
+  stroke-width: 1.5;
+  transition: stroke 0.3s var(--ease), filter 0.3s var(--ease);
+}
+.pnode.hovered .pnode-dot {
+  stroke: var(--accent-a);
+  stroke-width: 2;
+}
+.pnode.on .pnode-dot {
+  stroke: transparent;
+  filter: drop-shadow(0 1px 10px color-mix(in oklab, var(--accent-a) 65%, transparent));
+}
+.pnode-glyph {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink-2);
+  transition: fill 0.3s var(--ease);
+  pointer-events: none;
+}
+.pnode.on .pnode-glyph {
+  fill: #fff;
+}
+/* instant SVG tooltip — appears the moment a node is hovered, no native `title` delay */
+.ptip rect {
+  fill: var(--ink);
+  filter: drop-shadow(0 4px 10px rgba(15, 20, 30, 0.35));
+}
+.ptip text {
+  fill: #fff;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+}
+/* match the Explain-button tooltip entrance: fade in + slight slide-up */
+.ptip {
+  animation: ptipin 0.12s var(--ease);
+}
+@keyframes ptipin {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* first-run walkthrough */
+.guide-btn {
+  border: 1px solid var(--hair-2);
+  background: transparent;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  transition: all 0.2s var(--ease);
+}
+.guide-btn:hover {
+  color: var(--ink);
+  border-color: var(--accent-a);
+}
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+.tour-spot {
+  position: fixed;
+  border-radius: 14px;
+  border: 2px solid var(--accent-a);
+  box-shadow: 0 0 0 9999px rgba(15, 20, 30, 0.55), 0 0 22px color-mix(in oklab, var(--accent-a) 55%, transparent);
+  transition: top 0.35s var(--ease), left 0.35s var(--ease), width 0.35s var(--ease), height 0.35s var(--ease);
+  pointer-events: none;
+}
+.tour-card {
+  position: fixed;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  background: var(--panel);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-md);
+  box-shadow: 0 18px 50px -20px rgba(15, 20, 30, 0.55);
+  padding: 15px 16px 13px;
+  pointer-events: auto;
+  animation: reveal 0.3s var(--ease);
+}
+.tour-title {
+  font-size: 13.5px;
+  font-weight: 650;
+  margin-bottom: 5px;
+}
+.tour-body {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.tour-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.tour-skip {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 12px;
+  padding: 4px 2px;
+}
+.tour-skip:hover {
+  color: var(--ink-2);
+}
+.tour-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tour-dots {
+  display: flex;
+  gap: 4px;
+  margin-right: 4px;
+}
+.tour-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--hair-2);
+  transition: background 0.2s var(--ease);
+}
+.tour-dot.on {
+  background: var(--accent-a);
+}
+
+/* settings: header gear + right drawer */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--hair-2);
+  background: transparent;
+  color: var(--ink-2);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease), background 0.25s var(--ease);
+}
+.icon-btn .gear {
+  width: 23px;
+  height: 23px;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.icon-btn:hover .gear {
+  transform: rotate(60deg);
+}
+.icon-btn:hover {
+  color: var(--accent-b);
+  background: color-mix(in oklab, var(--accent-a) 8%, transparent);
+  border-color: var(--accent-a);
+}
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(15, 20, 30, 0.4);
+  backdrop-filter: blur(2px);
+  animation: reveal 0.2s var(--ease);
+}
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(380px, 92vw);
+  overflow-y: auto;
+  background: var(--paper);
+  border-left: 1px solid var(--hair-2);
+  box-shadow: -20px 0 60px -30px rgba(15, 20, 30, 0.5);
+  padding: 18px 20px 28px;
+  animation: drawerin 0.28s var(--ease);
+}
+@keyframes drawerin {
+  from {
+    transform: translateX(24px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.drawer-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 660;
+}
+.drawer-x {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 13px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+.drawer-x:hover {
+  color: var(--ink);
+  background: var(--hair);
+}
+.drawer-sec {
+  padding: 14px 0;
+  border-top: 1px solid var(--hair);
+}
+.drawer-sec-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+}
+.drawer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.conn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+.conn-dot.on {
+  background: var(--ok);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--ok) 60%, transparent);
+}
+.drawer-sub {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin: 5px 0 8px;
+  font-family: var(--font-mono);
+}
+.drawer-brain {
+  font-size: 15px;
+  font-weight: 620;
+}
+.layer-chain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.layer-chip {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  color: var(--ink-3);
+  background: var(--bg-1);
+}
+.layer-chip.on {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
+}
+.layer-arrow {
+  color: var(--ink-3);
+  font-size: 11px;
+}
+.drawer-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 6px 0 4px;
+}
+.drawer-stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: var(--bg-1);
+  border: 1px solid var(--hair);
+}
+.drawer-stats b {
+  font-size: 15px;
+  font-weight: 640;
+}
+.drawer-stats span {
+  font-size: 9px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+  text-align: center;
+}
+.drawer-note {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 0 0 10px;
+}
+.drawer-note b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.drawer-result {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--ok);
+}
+.drawer-sec.danger .drawer-sec-title {
+  color: var(--bad);
+}
+.danger-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid color-mix(in oklab, var(--bad) 45%, var(--hair));
+  background: transparent;
+  color: var(--bad);
+  padding: 9px 12px;
+  border-radius: 11px;
+  font-size: 12.5px;
+  font-weight: 560;
+  transition: all 0.2s var(--ease);
+}
+.danger-btn:hover {
+  background: color-mix(in oklab, var(--bad) 8%, transparent);
+}
+.danger-solid {
+  border-color: transparent;
+  background: var(--bad);
+  color: #fff;
+  padding: 7px 13px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.danger-solid:hover {
+  background: color-mix(in oklab, var(--bad) 88%, black);
+  color: #fff;
+  box-shadow: none;
+}
+.confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------------ responsive */
+@media (max-width: 1080px) {
+  /* header: below the anchored desktop, the autonomy dial's explanatory copy squishes into an ugly
+     narrow wrapping column — keep only the interactive level track, and let the header wrap so the
+     dial can drop to its own row instead of being crushed against the brand group. */
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .dial-label {
+    display: none;
+  }
+  /* stack the rail above the rest; the whole page flows naturally and scrolls */
+  .workspace {
+    flex-direction: column;
+  }
+  .rail {
+    flex: 0 0 auto;
+  }
+  .stage {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brain"
+      "right";
+  }
+  .brain-stage {
+    grid-area: brain;
+    min-height: 380px;
+  }
+  .col-right {
+    grid-area: right;
+  }
+  .col {
+    align-items: stretch;
+  }
+}
+@media (max-width: 620px) {
+  /* ---------- compact, premium mobile header ----------
+     the desktop header stacked everything and the autonomy dial's explanatory copy alone ate ~200px.
+     On phones we keep only what's actionable: brand + guide/settings on one row, a full-width domain
+     switcher, and the autonomy LEVEL track (the verbose "earn trust" copy is desktop-only). */
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 16px 2px;
+  }
+  .topbar-lead {
+    width: 100%;
+    gap: 10px 12px;
+    align-items: center;
+  }
+  .brandmark {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* the brain id + tagline are redundant on mobile (the active brain shows in the switcher below) —
+     drop them so brand + guide + settings sit comfortably on one row */
+  .brand-sub {
+    display: none;
+  }
+  /* domain switcher → full-width segmented control on its own row */
+  .topbar-lead .domains {
+    order: 5;
+    width: 100%;
+  }
+  .topbar-lead .domains .domain-opt {
+    flex: 1 1 0;
+    text-align: center;
+  }
+  /* autonomy: full-width level track (verbose label already hidden at ≤1080) */
+  .dial {
+    width: 100%;
+    gap: 8px;
+  }
+  .dial-track {
+    width: 100%;
+  }
+  .dial-opt {
+    flex: 1 1 0;
+    text-align: center;
+    padding: 7px 8px;
+  }
+
+  /* ---------- section order: lead with the brain hero + Think console ----------
+     On the laptop layout the Recall rail leads (it's the left column). On a phone the
+     first thing you want is the brain and a place to think — the memory list is
+     reference material that belongs below. Flattening workspace-main + stage to
+     display:contents drops their boxes so every leaf section becomes a direct flex
+     item of the (column) .workspace, letting `order` sequence them freely:
+        brain → Think console → scaffold result → memory list → audit */
+  .workspace-main,
+  .stage {
+    display: contents;
+  }
+  .brain-stage { order: 1; }
+  .dock        { order: 2; } /* Think console */
+  .col-right   { order: 3; } /* scaffold — the result of a think */
+  .rail        { order: 4; } /* memory list, now below the brain + console */
+  .audit       { order: 5; }
+
+  /* ---------- brain stage: tighter frame, brain more prominent ---------- */
+  .brain-stage {
+    min-height: 288px;
+    padding: 8px 8px 12px;
+    gap: 10px;
+  }
+  .brain-svg {
+    width: min(68%, 300px);
+  }
+
+  /* ---------- think console: input leads, controls sit beneath ----------
+     The console is the primary action of the brain-first flow, so the input gets the full
+     top row (the hero) with a hairline separating it from the control row:
+         [ Describe the situation… ..................... ]
+         ▸ THINK                          [Clear]  [ Think ]
+     ▸ THINK anchors the row as a label; Think is the filled primary, far right. */
+  .console {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    gap: 8px 10px;
+  }
+  .console input {
+    order: 1;
+    flex-basis: 100%;
+    font-size: 16px; /* ≥16px stops iOS Safari from zooming when the field is focused */
+    padding: 2px 0 10px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .console-glyph {
+    order: 2;
+    margin-right: auto; /* anchor the label left, push the buttons to the right edge */
+  }
+  .console .btn.ghost {
+    order: 3;
+  } /* Clear */
+  .console .btn:not(.ghost) {
+    order: 4;
+  } /* Think */
+  /* Think = filled primary on the phone — there's no hover to reveal it otherwise, so the
+     two buttons would read identically. Only when enabled; disabled stays the quiet state. */
+  .console .btn:not(.ghost):not(:disabled) {
+    border-color: transparent;
+    background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
+    color: #fff;
+    box-shadow: 0 8px 22px -8px color-mix(in oklab, var(--accent-a) 55%, transparent);
+  }
+
+  /* comfortable outer insets so cards aren't edge-to-edge; even rhythm between the
+     now-flattened sections (workspace-main/stage gaps are gone with display:contents) */
+  .workspace {
+    padding: 4px 14px 10px;
+    gap: 16px;
+  }
+}
+
+/* ------------------------------------------------------------------ viewport-anchored shell
+   On a desktop that's tall enough, the app becomes a fixed dashboard pinned to the viewport: the
+   Recall rail runs floor-to-ceiling on the left, the header sits on top, and beside the rail the
+   brain + scaffold hold the upper band with plasticity, the Think console and the audit stacked
+   below. Nothing grows or jumps as memories accumulate — the rail's list scrolls in place, the
+   scaffold column scrolls if it runs long. Narrower / shorter screens fall back to natural page
+   flow (the list caps bound growth there). */
+@media (min-width: 1081px) and (min-height: 640px) {
+  .app {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .topbar,
+  .dock,
+  .audit {
+    flex: none;
+  }
+  .brain-stage {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* the Recall list fills the full rail height and scrolls in place, so the "teach" + search
+     controls stay pinned at the top of the rail while memories scroll beneath them. */
+  .rail .mem-list {
+    flex: 1 1 auto;
+    min-height: 96px;
+    max-height: none;
+  }
+
+  /* the scaffold can run long (playbook + rules + check + audit); scroll the column as a unit. */
+  .col-right {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--hair-2) transparent;
+  }
+  .col-right::-webkit-scrollbar {
+    width: 10px;
+  }
+  .col-right::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .col-right::-webkit-scrollbar-thumb {
+    background: var(--hair-2);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.2s var(--ease);
+  }
+  .col-right:hover::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--accent-a) 42%, var(--hair-2));
+    background-clip: padding-box;
+  }
+}

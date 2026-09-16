@@ -1,0 +1,28 @@
+[project]
+name = "digital-brain"
+version = "0.1.0"
+description = "A portable, model-agnostic cognition layer (digital brain)"
+readme = "README.md"
+authors = [
+    { name = "Stephen Ochieng", email = "150342902+ochieng-stephen@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.5.0",
+    "fastembed>=0.8.0",
+    "mcp>=2.2.0",
+    "numpy>=2.5.3",
+    "pgvector>=0.5.0",
+    "psycopg[binary]>=3.3.5",
+    "starlette>=1.0.0",
+    "uvicorn>=0.30.0",
+]
+
+[project.scripts]
+brain = "digital_brain.cli:cli"
+digital-brain-mcp = "digital_brain.mcp_server:main"
+digital-brain-http = "digital_brain.http_server:main"
+
+[build-system]
+requires = ["uv_build>=0.8.17,<0.9.0"]
+build-backend = "uv_build"
