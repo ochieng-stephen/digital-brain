@@ -2144,14 +2144,57 @@ textarea {
   .rail        { order: 4; } /* memory list, now below the brain + console */
   .audit       { order: 5; }
 
-  /* ---------- brain stage: tighter frame, brain more prominent ---------- */
-  .brain-stage {
-    min-height: 288px;
-    padding: 8px 8px 12px;
-    gap: 10px;
+  /* ---------- first-impression hero: brain + console fill the opening screen ----------
+     On landing, the brain art and the Think console own the whole viewport — the brain takes
+     the lion's share up top and the console (with its example chip + fast/slow note) sits
+     flush against the bottom edge. Everything else (scaffold, recall, audit) waits below the
+     fold. The topbar is a stable 160px, so sizing the brain to (100dvh − header − console
+     stack) lands the console exactly on the bottom edge:
+         160 (topbar) + 4 (pad) + brain + 16 (gap) + 184 (console stack) = 100dvh  →  −364 */
+  .app {
+    min-height: 100dvh;
   }
+  .brain-stage {
+    /* leave the console stack a premium breath of space above the bottom edge (the −384 vs the
+       raw −364 that would sit flush), plus room for the home indicator via the dock's padding */
+    min-height: calc(100dvh - 384px - env(safe-area-inset-bottom));
+    padding: 8px 8px 12px;
+    gap: 12px;
+  }
+  /* Size the art by whichever is smaller: 82% of width (roomy on tall phones) or what the hero's
+     leftover height allows on short phones — so it scales down proportionally (no distortion, no
+     letterboxing) and can never outgrow the hero and shove the console below the fold. The art is
+     749×853, so a height budget of (hero − toggle/caption/gaps ≈ 162) maps to width ×749/853. */
   .brain-svg {
-    width: min(68%, 300px);
+    width: min(82%, 340px, calc((100dvh - 548px) * 0.878));
+  }
+  /* the console stack breathes above the bottom edge rather than jamming against it; the extra
+     safe-area inset keeps the note clear of the iPhone home indicator */
+  .dock {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  /* Keep the example chip to a single line (ellipsis) so the console stack is a constant
+     height at every phone width — otherwise it wraps on narrow screens and the −364 sizing
+     above would no longer land the console exactly on the bottom edge. Tapping still submits
+     the full query. */
+  .chip-suggest {
+    min-width: 0;
+    max-width: calc(100% - 46px); /* leave room for the "try:" label so the chip stays on its
+                                     line and ellipsizes instead of wrapping below it */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Cap the note at two lines so the console stack is a constant height at every width — that
+     is what lets the −364 sizing land the console exactly on the bottom edge, with no risk of
+     the note wrapping to a third line and pushing itself below the fold. The full note shows on
+     all mainstream phones (≥375px); only the very narrowest get a graceful trailing ellipsis. */
+  .stakes-note {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
   }
 
   /* ---------- think console: input leads, controls sit beneath ----------
