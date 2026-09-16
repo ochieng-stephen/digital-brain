@@ -374,7 +374,16 @@ def _ensure_seeded() -> None:
     """On a fresh cloud deploy the database is empty. Create the schema and seed both demo
     brains exactly once — guarded on an empty engrams table so restarts/redeploys are no-ops
     (and never wipe accumulated state). Seeding embeds text, so this also warms the model."""
+    import psycopg
+
+    from .config import DATABASE_URL
     from .store import Store
+
+    # pgvector's register_vector() (run inside Store.__init__) needs the `vector` type to already
+    # exist — but a fresh managed Postgres has no pgvector installed, so the very first connection
+    # would fail. Create the extension on a raw connection first; every Store() then registers fine.
+    with psycopg.connect(DATABASE_URL, autocommit=True) as c:
+        c.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
     s = Store()
     try:
