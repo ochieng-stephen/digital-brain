@@ -82,3 +82,12 @@ CREATE TABLE IF NOT EXISTS trust (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (brain_id, region)
 );
+
+-- Public-demo isolation: each visitor gets their own cloned brain namespace ("<canonical>#<sid>").
+-- This table just tracks liveness so old sandboxes can be swept (their brains carry the sid suffix).
+CREATE TABLE IF NOT EXISTS sessions (
+    sid        TEXT PRIMARY KEY,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_seen  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_last_seen ON sessions(last_seen);

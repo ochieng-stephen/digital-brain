@@ -111,11 +111,25 @@ export interface ExplainInfo {
   timeline: { event: number; kind: string; when: string; note: string }[];
 }
 
+// Each visitor gets a private sandbox on the server, keyed by this random session id. It's minted
+// once and persisted, so a refresh keeps the same sandbox, and sent as X-Session on every request.
+function sessionId(): string {
+  const KEY = "db_session";
+  let sid = localStorage.getItem(KEY);
+  if (!sid || !/^[a-f0-9]{8,64}$/.test(sid)) {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    sid = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    localStorage.setItem(KEY, sid);
+  }
+  return sid;
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(BASE + path, {
-    ...init,
-    headers: init?.body ? { "content-type": "application/json" } : undefined,
-  });
+  const headers: Record<string, string> = { "X-Session": sessionId() };
+  if (init?.body) headers["content-type"] = "application/json";
+  const res = await fetch(BASE + path, { ...init, headers });
+  if (res.status === 429)
+    throw new Error("The demo is busy right now — give it a few seconds and try again.");
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
   return res.json() as Promise<T>;
 }

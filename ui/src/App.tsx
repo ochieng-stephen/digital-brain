@@ -98,8 +98,8 @@ export default function App() {
     let alive = true;
     (async () => {
       try {
-        const h = await api.health();
-        const bs = await api.brains();
+        const bs = await api.brains(); // provisions this visitor's sandbox on first call
+        const h = await api.health();  // now reports this sandbox's own engram count
         if (!alive) return;
         setEngrams(h.engrams);
         setBrains(bs);

@@ -14,3 +14,6 @@ dist/
 
 # Dev iteration screenshots (not referenced by the README)
 /*.png
+
+# Playwright MCP artifacts
+.playwright-mcp/
