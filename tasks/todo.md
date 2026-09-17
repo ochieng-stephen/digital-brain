@@ -106,3 +106,5 @@ brain sandbox**, plus rate limiting and Railway uptime hardening.
   (and aliased) right after a backend deploy, or the site shows "Brain offline" in the gap.
 - Railway **plan/credits**: CLI exposes no billing — confirm in the dashboard the service has enough
   credit to stay up for the launch (a dead backend = a broken link).
+
+<!-- watch-path test: docs-only change should NOT trigger a backend deploy -->
