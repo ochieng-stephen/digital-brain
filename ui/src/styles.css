@@ -1493,17 +1493,32 @@ textarea {
     animation: none;
   }
 }
-.seam {
-  transition: stroke 0.35s var(--ease), stroke-width 0.35s var(--ease), filter 0.35s var(--ease);
+.seam,
+.seam-halo {
+  transition: stroke 0.35s var(--ease), stroke-width 0.35s var(--ease), opacity 0.35s var(--ease);
+}
+.seam-halo {
+  opacity: 0.35; /* a soft ink aura at rest — reads as a deliberate membrane, not a hairline */
 }
 .seam.pass {
   stroke: var(--ok);
-  filter: drop-shadow(0 0 10px color-mix(in oklab, var(--ok) 65%, transparent));
+  stroke-width: 8;
+}
+.seam-halo.pass {
+  stroke: var(--ok);
+  stroke-width: 22;
+  opacity: 0.9;
 }
 .seam.violation {
   stroke: var(--bad);
-  filter: drop-shadow(0 0 12px color-mix(in oklab, var(--bad) 65%, transparent));
+  stroke-width: 8;
   animation: seamflare 0.7s var(--ease);
+}
+.seam-halo.violation {
+  stroke: var(--bad);
+  stroke-width: 30;
+  opacity: 0.95;
+  animation: seamhaloflare 0.7s var(--ease);
 }
 .brain-caption {
   position: relative;
@@ -1557,13 +1572,24 @@ textarea {
 }
 @keyframes seamflare {
   0% {
-    stroke-width: 4;
+    stroke-width: 6;
   }
   40% {
-    stroke-width: 11;
+    stroke-width: 16;
   }
   100% {
-    stroke-width: 4;
+    stroke-width: 8;
+  }
+}
+@keyframes seamhaloflare {
+  0% {
+    stroke-width: 16;
+  }
+  40% {
+    stroke-width: 40;
+  }
+  100% {
+    stroke-width: 30;
   }
 }
 @keyframes terminalfire {

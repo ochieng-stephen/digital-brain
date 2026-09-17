@@ -188,10 +188,14 @@ export default function BrainCore({ nodes, edges, thinking, seamState, energy }:
           <stop offset="1" stopColor="var(--accent-b)" />
         </linearGradient>
         <linearGradient id="seamGrad" gradientUnits="userSpaceOnUse" x1="0" y1={SEAM_Y1} x2="0" y2={SEAM_Y2}>
-          <stop offset="0" stopColor="var(--ink-3)" stopOpacity="0.0" />
-          <stop offset="0.5" stopColor="var(--ink)" stopOpacity="0.35" />
-          <stop offset="1" stopColor="var(--ink-3)" stopOpacity="0.0" />
+          <stop offset="0" stopColor="var(--ink)" stopOpacity="0" />
+          <stop offset="0.12" stopColor="var(--ink)" stopOpacity="0.55" />
+          <stop offset="0.88" stopColor="var(--ink)" stopOpacity="0.55" />
+          <stop offset="1" stopColor="var(--ink)" stopOpacity="0" />
         </linearGradient>
+        <filter id="seamBlur" x="-120%" y="-120%" width="340%" height="340%">
+          <feGaussianBlur stdDeviation="6" />
+        </filter>
         <filter id="softBlur" x="-80%" y="-80%" width="260%" height="260%">
           <feGaussianBlur stdDeviation="16" />
         </filter>
@@ -243,7 +247,19 @@ export default function BrainCore({ nodes, edges, thinking, seamState, energy }:
           filter="url(#softBlur)"
         />
 
-        {/* the Constitution seam — a flare on the drawn divider on a check */}
+        {/* the Constitution membrane between mind and machine — a soft aura + a crisp core, drawn
+            along the divider; both light up (green pass / red violation flare) on a check */}
+        <line
+          className={"seam-halo " + seamState}
+          x1={SEAM_X}
+          y1={SEAM_Y1}
+          x2={SEAM_X}
+          y2={SEAM_Y2}
+          stroke="url(#seamGrad)"
+          strokeWidth={16}
+          strokeLinecap="round"
+          filter="url(#seamBlur)"
+        />
         <line
           className={"seam " + seamState}
           x1={SEAM_X}
@@ -251,7 +267,7 @@ export default function BrainCore({ nodes, edges, thinking, seamState, energy }:
           x2={SEAM_X}
           y2={SEAM_Y2}
           stroke="url(#seamGrad)"
-          strokeWidth={4}
+          strokeWidth={6}
           strokeLinecap="round"
         />
 
