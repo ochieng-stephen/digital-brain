@@ -514,7 +514,7 @@ export default function App() {
             <BrandMark live={online === true} />
             <div>
               <div className="brand-name">Digital Brain</div>
-              <div className="brand-sub">live cognition layer · {brainId}</div>
+              <div className="brand-sub">live cognition layer · {brainId.split("#")[0]}</div>
             </div>
           </div>
           <DomainSwitcher brains={brains} active={brainId} onChange={switchDomain} />
@@ -837,7 +837,7 @@ export default function App() {
               <div className="panel-head">
                 <div className="panel-title">
                   <h3>Scaffold</h3>
-                  <span className="tick">{brainId}</span>
+                  <span className="tick">{brainId.split("#")[0]}</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: "auto" }}>
                   <button className="btn ghost small" onClick={copyScaffold} data-tip="Copy this scaffold to hand to any model" data-tip-pos="bottom">
