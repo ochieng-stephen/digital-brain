@@ -84,7 +84,25 @@ brain sandbox**, plus rate limiting and Railway uptime hardening.
 - Verified end-to-end against a local Postgres: session validation (400), provisioning, cross-session
   isolation, forced-scope security, reset-to-pristine, rate limiting, TTL sweep. UI builds clean.
 
-### Still owner's call (not code)
+### Deploy + live verification (DONE)
+- Backend: `railway up` (Railway is NOT git-connected — manual deploy each time). Deploy
+  `6b677ca2` SUCCESS; live `/brains` without a session → 400 = new code confirmed.
+- Frontend: git push auto-built on Vercel, but the custom aliases were **pinned to the old
+  deployment** and didn't follow — briefly served "Brain offline" until re-aliased. Re-pointed
+  `digital-brain-app` + `digital-brain-ai` to the new deployment with `vercel alias set`.
+- Live end-to-end (Playwright on digital-brain-app.vercel.app): fresh visitor mints a session,
+  provisions a pristine 26-engram sandbox (6 medical memories), runs the full think cycle
+  (SLOW · SYSTEM 2 · conf 0.679, 6-step playbook, 4 hard rules), logs to audit, subtitle is clean
+  ("individual:dr_demo", no #sid leak) — **0 console errors**.
+- Security review: no dependency manifests touched → runtime dep surface unchanged; the change
+  itself is a hardening (session isolation + forced scoping + rate limiting + strict sid validation).
+
+### Operational gotchas for future updates (owner)
+- **Vercel custom aliases do NOT auto-follow git deploys** — every frontend redeploy needs
+  `vercel alias set <new-deployment> digital-brain-app.vercel.app` (and `-ai`), or set them as the
+  project's Production Domains in the dashboard so they auto-update.
+- **Railway is not git-connected** — the backend redeploys only via `railway up` from the repo.
+- **Deploy order matters**: the backend now REQUIRES X-Session, so always get the new frontend live
+  (and aliased) right after a backend deploy, or the site shows "Brain offline" in the gap.
 - Railway **plan/credits**: CLI exposes no billing — confirm in the dashboard the service has enough
   credit to stay up for the launch (a dead backend = a broken link).
-- Post-deploy: confirm a fresh live session provisions a pristine sandbox (prod template = 26 engrams).
