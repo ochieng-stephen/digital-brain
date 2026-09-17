@@ -101,10 +101,10 @@ brain sandbox**, plus rate limiting and Railway uptime hardening.
 - **Vercel custom aliases do NOT auto-follow git deploys** — every frontend redeploy needs
   `vercel alias set <new-deployment> digital-brain-app.vercel.app` (and `-ai`), or set them as the
   project's Production Domains in the dashboard so they auto-update.
-- **Railway is not git-connected** — the backend redeploys only via `railway up` from the repo.
+- **Railway is git-connected** — pushes to `main` auto-deploy the backend (watch paths limit rebuilds
+  to backend files: `/Dockerfile`, `/railway.json`, `/pyproject.toml`, `/uv.lock`, `/src/**`);
+  `railway up` still works for a manual deploy. `/health` returns the live commit sha.
 - **Deploy order matters**: the backend now REQUIRES X-Session, so always get the new frontend live
   (and aliased) right after a backend deploy, or the site shows "Brain offline" in the gap.
 - Railway **plan/credits**: CLI exposes no billing — confirm in the dashboard the service has enough
   credit to stay up for the launch (a dead backend = a broken link).
-
-<!-- watch-path test: docs-only change should NOT trigger a backend deploy -->
