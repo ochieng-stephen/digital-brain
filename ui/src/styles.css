@@ -1543,19 +1543,19 @@ textarea {
    outward — a slow ease-out tail, deliberately unhurried compared to the ignite. */
 .seam-lit.pass-out {
   stroke: var(--ok);
-  animation: seamCoreOut 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+  animation: seamCoreOut 1.1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
 }
 .seam-lit-halo.pass-out {
   stroke: var(--ok);
-  animation: seamHaloOut 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+  animation: seamHaloOut 1.1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
 }
 .seam-lit.violation-out {
   stroke: var(--bad);
-  animation: seamCoreOutHard 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+  animation: seamCoreOutHard 1.1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
 }
 .seam-lit-halo.violation-out {
   stroke: var(--bad);
-  animation: seamHaloOutHard 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+  animation: seamHaloOutHard 1.1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .seam-lit,

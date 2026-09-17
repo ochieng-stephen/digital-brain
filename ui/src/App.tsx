@@ -289,7 +289,7 @@ export default function App() {
       // not per check. Re-checking a draft must not re-open the reflect step on the same cycle.
       // Ignite + hold, then a graceful dissolve (*-out) before returning to rest.
       window.setTimeout(() => setSeam(res.pass ? "pass-out" : "violation-out"), 2600);
-      window.setTimeout(() => setSeam("idle"), 3550);
+      window.setTimeout(() => setSeam("idle"), 3700);
       refresh();
     } finally {
       setBusy(false);
