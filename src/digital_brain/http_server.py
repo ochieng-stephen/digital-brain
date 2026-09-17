@@ -265,7 +265,8 @@ async def health(req: Request) -> Response:
             ).fetchone()["n"]
         else:
             n = b.store.conn.execute("SELECT count(*) AS n FROM engrams").fetchone()["n"]
-        return J({"ok": True, "engrams": n})
+        # RAILWAY_GIT_COMMIT_SHA is set only on git-triggered deploys → also a deploy provenance marker.
+        return J({"ok": True, "engrams": n, "commit": os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")[:7]})
     finally:
         b.close()
 
