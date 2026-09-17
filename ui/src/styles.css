@@ -1506,8 +1506,6 @@ textarea {
 .seam-lit,
 .seam-lit-halo {
   opacity: 0;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.3, 1),
-    stroke-width 0.62s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .seam-lit {
   stroke-width: 6;
@@ -1541,11 +1539,28 @@ textarea {
   stroke-width: 28;
   animation: seamHaloInHard 0.64s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
+/* graceful power-down: the colour keeps painting while its opacity fades and the aura dissipates
+   outward — a slow ease-out tail, deliberately unhurried compared to the ignite. */
+.seam-lit.pass-out {
+  stroke: var(--ok);
+  animation: seamCoreOut 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+}
+.seam-lit-halo.pass-out {
+  stroke: var(--ok);
+  animation: seamHaloOut 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+}
+.seam-lit.violation-out {
+  stroke: var(--bad);
+  animation: seamCoreOutHard 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+}
+.seam-lit-halo.violation-out {
+  stroke: var(--bad);
+  animation: seamHaloOutHard 0.95s cubic-bezier(0.22, 1, 0.3, 1) forwards;
+}
 @media (prefers-reduced-motion: reduce) {
   .seam-lit,
   .seam-lit-halo {
     animation: none;
-    transition: opacity 0.25s linear;
   }
 }
 .brain-caption {
@@ -1669,6 +1684,47 @@ textarea {
   100% {
     opacity: 0.72;
     stroke-width: 28;
+  }
+}
+/* dissolve: fade opacity to nothing; the aura widens slightly as it dissipates (energy releasing) */
+@keyframes seamCoreOut {
+  from {
+    opacity: 0.98;
+    stroke-width: 8;
+  }
+  to {
+    opacity: 0;
+    stroke-width: 6;
+  }
+}
+@keyframes seamCoreOutHard {
+  from {
+    opacity: 1;
+    stroke-width: 9;
+  }
+  to {
+    opacity: 0;
+    stroke-width: 6;
+  }
+}
+@keyframes seamHaloOut {
+  from {
+    opacity: 0.6;
+    stroke-width: 22;
+  }
+  to {
+    opacity: 0;
+    stroke-width: 34;
+  }
+}
+@keyframes seamHaloOutHard {
+  from {
+    opacity: 0.72;
+    stroke-width: 28;
+  }
+  to {
+    opacity: 0;
+    stroke-width: 42;
   }
 }
 @keyframes terminalfire {

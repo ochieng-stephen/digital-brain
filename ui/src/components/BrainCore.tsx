@@ -19,7 +19,8 @@
 import { useMemo } from "react";
 import type { MemKind } from "../lib/api";
 
-export type SeamState = "idle" | "pass" | "violation";
+// pass/violation = ignite + hold; the *-out states play the graceful dissolve before returning to idle
+export type SeamState = "idle" | "pass" | "violation" | "pass-out" | "violation-out";
 
 export interface MemoryNode {
   id: string;

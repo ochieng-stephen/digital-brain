@@ -287,7 +287,9 @@ export default function App() {
       setSeam(res.pass ? "pass" : "violation");
       // note: do NOT reset `reflected` here — reflection is once per cognitive cycle (per think),
       // not per check. Re-checking a draft must not re-open the reflect step on the same cycle.
-      window.setTimeout(() => setSeam("idle"), 2600);
+      // Ignite + hold, then a graceful dissolve (*-out) before returning to rest.
+      window.setTimeout(() => setSeam(res.pass ? "pass-out" : "violation-out"), 2600);
+      window.setTimeout(() => setSeam("idle"), 3550);
       refresh();
     } finally {
       setBusy(false);
