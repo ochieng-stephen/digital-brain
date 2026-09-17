@@ -1479,17 +1479,29 @@ textarea {
     animation: none;
   }
 }
-/* circuit terminals: subtle idle firing, quicker with autonomy */
-.terminal {
+/* the two live signal endpoints: a breathing core + a periodic emission ring ("transmission" pulse).
+   Rhythm (duration/delay) comes from the element's inline style, so it quickens with autonomy. */
+.terminal-core {
   transform-box: fill-box;
   transform-origin: center;
-  animation-name: terminalfire;
+  animation-name: termCore;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
-  opacity: calc(0.3 + var(--energy) * 0.3);
+  filter: drop-shadow(0 0 3px color-mix(in oklab, var(--accent-b) 65%, transparent));
+}
+.terminal-ping {
+  fill: none;
+  stroke: var(--accent-a);
+  stroke-width: 1.6;
+  animation-name: termPing;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.15, 0.6, 0.25, 1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .terminal {
+  .terminal-ping {
+    display: none;
+  }
+  .terminal-core {
     animation: none;
   }
 }
@@ -1727,15 +1739,33 @@ textarea {
     stroke-width: 42;
   }
 }
-@keyframes terminalfire {
+/* core: a gentle breathe — never fully off, it's a live endpoint */
+@keyframes termCore {
   0%,
   100% {
-    opacity: 0.25;
-    transform: scale(0.85);
+    opacity: 0.62;
+    transform: scale(0.9);
   }
   50% {
-    opacity: 0.95;
-    transform: scale(1.15);
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+/* ping: emit a ring on the beat — it expands outward and fades (the signal), then rests */
+@keyframes termPing {
+  0%,
+  35% {
+    r: 4;
+    opacity: 0;
+    stroke-width: 2;
+  }
+  46% {
+    opacity: 0.5;
+  }
+  100% {
+    r: 26;
+    opacity: 0;
+    stroke-width: 0.4;
   }
 }
 @keyframes reveal {

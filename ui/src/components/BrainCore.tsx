@@ -153,15 +153,12 @@ function layoutMap(nodes: MemoryNode[], edges: MemoryEdge[]): Map<string, Pt> {
   return new Map(nodes.map((nd, i) => [nd.id, pos[i]]));
 }
 
-// the drawn circuit-lead terminals — they fire as the chip's outputs (on-geometry, no invented paths)
+// Two live signal endpoints kept on the chip (the rest were removed): the 2nd wire off the top and
+// the leftmost wire off the bottom. Each is a breathing core that periodically emits a ring — a
+// premium "transmission" pulse — on-geometry at the drawn wire ends.
 const TERMINALS: Array<[number, number]> = [
-  [499, 128],
-  [616, 196],
-  [545, 220],
-  [631, 317],
-  [715, 421],
-  [650, 621],
-  [553, 686],
+  [499, 128], // top — 2nd wire pointing up
+  [553, 686], // bottom — leftmost wire down
 ];
 
 export default function BrainCore({ nodes, edges, thinking, seamState, energy }: Props) {
@@ -274,18 +271,17 @@ export default function BrainCore({ nodes, edges, thinking, seamState, energy }:
           strokeWidth={6} strokeLinecap="round"
         />
 
-        {/* circuit terminals firing — subtle idle life, quicker with autonomy */}
-        {TERMINALS.map(([cx, cy], i) => (
-          <circle
-            key={i}
-            className="terminal"
-            cx={cx}
-            cy={cy}
-            r={5}
-            fill="url(#accentGrad)"
-            style={{ animationDuration: fireDur, animationDelay: `${(i * 0.32).toFixed(2)}s` }}
-          />
-        ))}
+        {/* two live signal endpoints — a breathing core that periodically emits an expanding ring
+            (a "transmission" pulse); the nodes are phase-offset so they feel alive, not mechanical */}
+        {TERMINALS.map(([cx, cy], i) => {
+          const beat = { animationDuration: fireDur, animationDelay: `${(i * 1.6).toFixed(2)}s` };
+          return (
+            <g key={i} className="terminal-node">
+              <circle className="terminal-ping" cx={cx} cy={cy} r={4} style={beat} />
+              <circle className="terminal-core" cx={cx} cy={cy} r={4.2} fill="url(#accentGrad)" style={beat} />
+            </g>
+          );
+        })}
       </g>
     </svg>
   );
