@@ -247,28 +247,30 @@ export default function BrainCore({ nodes, edges, thinking, seamState, energy }:
           filter="url(#softBlur)"
         />
 
-        {/* the Constitution membrane between mind and machine — a soft aura + a crisp core, drawn
-            along the divider; both light up (green pass / red violation flare) on a check */}
+        {/* the Constitution membrane between mind and machine. Two layers on purpose:
+            (1) a STATIC ink core + aura — always present, the resting divider;
+            (2) a COLOURED light layer that ignites (green pass / red violation) on a check and
+                dissolves out. Kept separate so the colour can fade its own opacity gracefully —
+                a stroke can't interpolate colour↔gradient, so a single line would snap off. */}
         <line
-          className={"seam-halo " + seamState}
-          x1={SEAM_X}
-          y1={SEAM_Y1}
-          x2={SEAM_X}
-          y2={SEAM_Y2}
-          stroke="url(#seamGrad)"
-          strokeWidth={16}
-          strokeLinecap="round"
-          filter="url(#seamBlur)"
+          className="seam-halo"
+          x1={SEAM_X} y1={SEAM_Y1} x2={SEAM_X} y2={SEAM_Y2}
+          stroke="url(#seamGrad)" strokeWidth={16} strokeLinecap="round" filter="url(#seamBlur)"
         />
         <line
-          className={"seam " + seamState}
-          x1={SEAM_X}
-          y1={SEAM_Y1}
-          x2={SEAM_X}
-          y2={SEAM_Y2}
-          stroke="url(#seamGrad)"
-          strokeWidth={6}
-          strokeLinecap="round"
+          className="seam"
+          x1={SEAM_X} y1={SEAM_Y1} x2={SEAM_X} y2={SEAM_Y2}
+          stroke="url(#seamGrad)" strokeWidth={6} strokeLinecap="round"
+        />
+        <line
+          className={"seam-lit-halo " + seamState}
+          x1={SEAM_X} y1={SEAM_Y1} x2={SEAM_X} y2={SEAM_Y2}
+          strokeWidth={16} strokeLinecap="round" filter="url(#seamBlur)"
+        />
+        <line
+          className={"seam-lit " + seamState}
+          x1={SEAM_X} y1={SEAM_Y1} x2={SEAM_X} y2={SEAM_Y2}
+          strokeWidth={6} strokeLinecap="round"
         />
 
         {/* circuit terminals firing — subtle idle life, quicker with autonomy */}

@@ -1493,32 +1493,60 @@ textarea {
     animation: none;
   }
 }
-.seam,
+/* static ink membrane — the resting divider (always present) */
 .seam-halo {
-  transition: stroke 0.35s var(--ease), stroke-width 0.35s var(--ease), opacity 0.35s var(--ease);
+  opacity: 0.35;
 }
-.seam-halo {
-  opacity: 0.35; /* a soft ink aura at rest — reads as a deliberate membrane, not a hairline */
+
+/* coloured light layer — invisible at rest; ignites on a check, then dissolves.
+   Asymmetric by design (Gleb-style): the ignite is a quick, energetic bloom-and-settle (~0.6s,
+   overshoot in the keyframes); the exit is a slower, softer power-down — the opacity dissolves
+   over ~0.9s with a long ease-out tail while the width gently retracts. Appears with intent,
+   leaves gently — never a symmetric on/off cut. */
+.seam-lit,
+.seam-lit-halo {
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.3, 1),
+    stroke-width 0.62s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.seam.pass {
+.seam-lit {
+  stroke-width: 6;
+}
+.seam-lit-halo {
+  stroke-width: 16;
+}
+/* resting-lit values equal each ignite keyframe's 100% frame, so the animation settles seamlessly
+   (no fill needed) and the exit transition runs from there back to opacity 0. */
+.seam-lit.pass {
   stroke: var(--ok);
+  opacity: 0.98;
   stroke-width: 8;
+  animation: seamCoreIn 0.58s cubic-bezier(0.2, 0.85, 0.2, 1);
 }
-.seam-halo.pass {
+.seam-lit-halo.pass {
   stroke: var(--ok);
+  opacity: 0.6;
   stroke-width: 22;
-  opacity: 0.9;
+  animation: seamHaloIn 0.58s cubic-bezier(0.2, 0.85, 0.2, 1);
 }
-.seam.violation {
+.seam-lit.violation {
   stroke: var(--bad);
-  stroke-width: 8;
-  animation: seamflare 0.7s var(--ease);
+  opacity: 1;
+  stroke-width: 9;
+  animation: seamCoreInHard 0.64s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
-.seam-halo.violation {
+.seam-lit-halo.violation {
   stroke: var(--bad);
-  stroke-width: 30;
-  opacity: 0.95;
-  animation: seamhaloflare 0.7s var(--ease);
+  opacity: 0.72;
+  stroke-width: 28;
+  animation: seamHaloInHard 0.64s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .seam-lit,
+  .seam-lit-halo {
+    animation: none;
+    transition: opacity 0.25s linear;
+  }
 }
 .brain-caption {
   position: relative;
@@ -1570,26 +1598,77 @@ textarea {
     transform: scale(1.03);
   }
 }
-@keyframes seamflare {
+/* ignite: rise from nothing, overshoot (bloom), settle to the resting-lit value */
+@keyframes seamCoreIn {
   0% {
-    stroke-width: 6;
+    opacity: 0;
+    stroke-width: 5;
   }
-  40% {
-    stroke-width: 16;
+  26% {
+    opacity: 1;
+    stroke-width: 13;
+  }
+  60% {
+    opacity: 0.95;
+    stroke-width: 7.5;
   }
   100% {
+    opacity: 0.98;
     stroke-width: 8;
   }
 }
-@keyframes seamhaloflare {
+@keyframes seamCoreInHard {
   0% {
-    stroke-width: 16;
+    opacity: 0;
+    stroke-width: 5;
   }
-  40% {
-    stroke-width: 40;
+  22% {
+    opacity: 1;
+    stroke-width: 15;
+  }
+  60% {
+    opacity: 0.98;
+    stroke-width: 8.5;
   }
   100% {
-    stroke-width: 30;
+    opacity: 1;
+    stroke-width: 9;
+  }
+}
+@keyframes seamHaloIn {
+  0% {
+    opacity: 0;
+    stroke-width: 16;
+  }
+  26% {
+    opacity: 0.85;
+    stroke-width: 40;
+  }
+  60% {
+    opacity: 0.6;
+    stroke-width: 24;
+  }
+  100% {
+    opacity: 0.6;
+    stroke-width: 22;
+  }
+}
+@keyframes seamHaloInHard {
+  0% {
+    opacity: 0;
+    stroke-width: 16;
+  }
+  22% {
+    opacity: 0.95;
+    stroke-width: 46;
+  }
+  60% {
+    opacity: 0.72;
+    stroke-width: 32;
+  }
+  100% {
+    opacity: 0.72;
+    stroke-width: 28;
   }
 }
 @keyframes terminalfire {
