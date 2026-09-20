@@ -1,3 +1,49 @@
+# Restore per-domain reset (regression from the sandbox refactor)
+
+## Problem
+`/reset` was rewritten in the sandbox refactor (`36c9d5e`) to wipe+re-clone the WHOLE session and
+stopped reading the request body. So "Reset this brain (Dr. Demo)" and "Reset all brains" became
+identical — "this brain" misleadingly wipes the visitor's legal sandbox too. Pre-sandbox, `scope`
+was honored ("brain" kept the other domain; "all" reset both).
+
+## Fix (backend only; UI/api already send {scope, brain})
+- [x] Factor the sandbox clone/wipe to take a brain list: `_clone_brains(conn, sid, brains)` +
+      `_wipe_brains(conn, sid, brains)`; keep `_clone_template`/`_wipe_session` as full-set wrappers
+      (middleware provisioning path unchanged).
+- [x] `_domain_chain(brain)` → the two template brains for one domain's chain (domain + individual),
+      EXCLUDING the shared base (base is shared by both chains and users only ever write to the
+      individual layer, so a single-domain reset must leave base + the other domain intact).
+- [x] Rewrite the `reset` endpoint: read `scope` (default "brain") + `brain`; reset `TEMPLATE_BRAINS`
+      when "all", else `_domain_chain(brain)`. Keep the sessions row alive (bump last_seen), don't
+      touch the rate counter.
+- [x] Verify against local Postgres: teach medical + legal, reset "brain" (medical) → medical clean,
+      legal memories kept, base intact; reset "all" → both clean. Cross-session isolation unaffected.
+
+## Review
+Backend-only fix (`src/digital_brain/http_server.py`); UI/api untouched since they already POST
+`{scope, brain}`.
+
+- Split the sandbox clone/wipe into brain-list-parameterized primitives `_clone_brains` /
+  `_wipe_brains`; `_clone_template` / `_wipe_session` now delegate with the full `TEMPLATE_BRAINS`
+  set + the sessions-row handling, so the middleware provisioning path is byte-for-byte unchanged.
+  `_wipe_brains` deletes events/cycles/trust by exact scoped brain_id (all logged under the acting
+  brain) instead of a `%#sid` LIKE — equivalent over the full set, precise for a subset.
+- `_domain_chain(brain)` returns the domain+individual template pair for the selected brain (substring
+  match, medical default), deliberately EXCLUDING the shared `base` — users only ever write to the
+  individual layer, and base is shared by both chains, so a single-domain reset leaves it alone.
+- `reset` now honors `scope`: `all` → both domains; `brain` (default) → only the selected chain,
+  keeping the other domain's memories and the shared base. Session stays live (bump `last_seen`);
+  the rate counter is left intact (only the TTL sweep drops it).
+- Verified at the function level against local Postgres (16/16 checks): full provision (26 engrams,
+  both domains); after a medical `scope='brain'` reset the medical taught memory + its event are
+  gone while the legal memory + event and `base#sid` remain, the medical chain is re-cloned with a
+  correct parent link, and the session stays live; `scope='all'` then wipes the legal memory too and
+  restores the pristine 26-engram baseline; teardown removed the throwaway sandbox cleanly.
+- Deploy note: backward-compatible standalone backend change (old UI without the params defaults to a
+  medical-chain reset), so it doesn't trip the X-Session deploy-coupling rule — but not yet committed.
+
+---
+
 # Per-visitor sandbox brains (public LinkedIn launch)
 
 ## Goal

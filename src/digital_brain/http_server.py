@@ -94,11 +94,23 @@ def _rate_check_heavy(sid: str) -> Optional[Response]:
     return None
 
 
-def _clone_template(conn, sid: str) -> None:
-    """Clone the pristine template brains into this session's namespace. A freshly-seeded template
-    has no associations/events, so fresh engram uuids need no reference remapping; counters reset
-    (salience → base_salience, counts → 0) so every sandbox starts identical and clean. The self-FK
-    on brains.parent_id is satisfied at statement end, so one INSERT…SELECT is order-independent."""
+def _domain_chain(brain: Optional[str]) -> list[str]:
+    """The template brains that make up ONE domain's chain — the domain + its individual, EXCLUDING
+    the shared base. Base is shared by both chains and users only ever write to the individual layer,
+    so a single-domain reset must leave base (and the other domain) intact. Keyed off the id substring
+    (mirrors the pre-sandbox reset), defaulting to the medical chain."""
+    canonical = (brain or "").split("#", 1)[0]
+    if "lawyer" in canonical or "legal" in canonical:
+        return ["domain:legal_contract_review", "individual:lawyer_demo"]
+    return ["domain:emergency_medicine", "individual:dr_demo"]
+
+
+def _clone_brains(conn, sid: str, brains: list[str]) -> None:
+    """Clone the given pristine template brains into this session's namespace. A freshly-seeded
+    template has no associations/events, so fresh engram uuids need no reference remapping; counters
+    reset (salience → base_salience, counts → 0) so every sandbox starts identical and clean. The
+    self-FK on brains.parent_id is satisfied at statement end (order-independent); any parent NOT in
+    `brains` (e.g. the shared base on a single-domain reset) must already exist in the namespace."""
     suffix = "#" + sid
     conn.execute(
         """INSERT INTO brains(id,name,kind,parent_id,autonomy)
@@ -106,7 +118,7 @@ def _clone_template(conn, sid: str) -> None:
                   CASE WHEN parent_id IS NULL THEN NULL ELSE parent_id||%s END, autonomy
            FROM brains WHERE id = ANY(%s)
            ON CONFLICT(id) DO NOTHING""",
-        (suffix, suffix, TEMPLATE_BRAINS),
+        (suffix, suffix, brains),
     )
     conn.execute(
         """INSERT INTO engrams(brain_id,type,region,content,embedding,salience,base_salience,
@@ -114,8 +126,24 @@ def _clone_template(conn, sid: str) -> None:
            SELECT brain_id||%s, type, region, content, embedding, base_salience, base_salience,
                   decay_rate, source, status, confidence, triggers, layer_priority
            FROM engrams WHERE brain_id = ANY(%s) AND status <> 'pruned'""",
-        (suffix, TEMPLATE_BRAINS),
+        (suffix, brains),
     )
+
+
+def _wipe_brains(conn, sid: str, brains: list[str]) -> None:
+    """Remove the given session-scoped brains: their side-table rows (events/cycles/trust, all logged
+    under the acting brain), then the brains child→parent (engrams and their associations cascade).
+    Leaves the sessions row and any brain not in `brains` untouched. sid + brains are trusted inputs."""
+    scoped = [b + "#" + sid for b in brains]
+    for tbl in ("events", "cycles", "trust"):
+        conn.execute(f"DELETE FROM {tbl} WHERE brain_id = ANY(%s)", (scoped,))
+    for kind in ("individual", "domain", "base"):  # child → parent, so each parent FK is free
+        conn.execute("DELETE FROM brains WHERE id = ANY(%s) AND kind=%s", (scoped, kind))
+
+
+def _clone_template(conn, sid: str) -> None:
+    """Provision a full sandbox (all template brains) and mark the session live."""
+    _clone_brains(conn, sid, TEMPLATE_BRAINS)
     conn.execute(
         "INSERT INTO sessions(sid) VALUES(%s) ON CONFLICT(sid) DO UPDATE SET last_seen=now()",
         (sid,),
@@ -123,13 +151,8 @@ def _clone_template(conn, sid: str) -> None:
 
 
 def _wipe_session(conn, sid: str) -> None:
-    """Remove one sandbox: side tables (no FK) by suffix, then brains child→parent (engrams and
-    their associations cascade), then the sessions row. sid is pre-validated hex, so the LIKE is safe."""
-    like = "%#" + sid
-    for tbl in ("events", "cycles", "trust"):
-        conn.execute(f"DELETE FROM {tbl} WHERE brain_id LIKE %s", (like,))
-    for kind in ("individual", "domain", "base"):
-        conn.execute("DELETE FROM brains WHERE id LIKE %s AND kind=%s", (like, kind))
+    """Remove an entire sandbox (all brains) and its sessions row."""
+    _wipe_brains(conn, sid, TEMPLATE_BRAINS)
     conn.execute("DELETE FROM sessions WHERE sid=%s", (sid,))
 
 
@@ -474,17 +497,24 @@ async def graph(req: Request) -> Response:
 
 
 async def reset(req: Request) -> Response:
-    """Reset the caller's OWN sandbox to the clean seed: wipe its brains and re-clone the template.
-    Only ever touches this visitor's namespace — never the shared template or another session."""
+    """Reset the caller's OWN sandbox to the clean seed. scope='all' resets both domains; scope='brain'
+    (default) resets only the selected domain's chain (its domain + individual), keeping the shared
+    base and the OTHER domain's taught memories intact. Only ever touches this visitor's namespace —
+    never the shared template or another session; the session stays live throughout."""
     sid = req.state.sid
+    body = await req.json()
+    scope = body.get("scope", "brain")
+    brains = TEMPLATE_BRAINS if scope == "all" else _domain_chain(body.get("brain"))
     b = Brain()
     try:
-        _wipe_session(b.store.conn, sid)
-        _clone_template(b.store.conn, sid)
-        n = b.store.conn.execute(
+        conn = b.store.conn
+        _wipe_brains(conn, sid, brains)
+        _clone_brains(conn, sid, brains)
+        conn.execute("UPDATE sessions SET last_seen=now() WHERE sid=%s", (sid,))
+        n = conn.execute(
             "SELECT count(*) AS n FROM engrams WHERE brain_id LIKE %s", ("%#" + sid,)
         ).fetchone()["n"]
-        return J({"ok": True, "scope": "session", "engrams": n})
+        return J({"ok": True, "scope": scope, "engrams": n})
     finally:
         b.close()
 

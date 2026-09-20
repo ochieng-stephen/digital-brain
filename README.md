@@ -24,7 +24,9 @@ not a diagnostic device — a clinician is always in the loop; synthetic data on
   background **`sleep`** (decay + prune) and a **trust ramp** (`review`/`trust`/`promote`) for
   earned per-region autonomy; plus **audit/undo** (`explain`/`audit`/`rewind`) over the
   append-only event log.
-- **Interfaces** — a `brain` CLI and a local **MCP server** (15 tools) so any model can drive the loop.
+- **Interfaces** — a `brain` CLI, a local **MCP server** (15 tools) so any model can drive the loop,
+  and an **HTTP bridge** (`digital-brain-http`) powering a **React web UI** (`ui/`): a live, visual
+  console that drives the *same* engine (real Postgres + pgvector + embeddings — not a simulation).
 - **Portable across fields** — the same `base` brain sits under multiple domains. Ships with two:
   a doctor's **chest-pain workup** and a lawyer's **commercial-contract review**, each adding its
   own Constitution + playbook while sharing the base Instinct (`brain seed --domain all`).
@@ -82,7 +84,7 @@ uv run python demo.py
 # MCP server (stdio) — point any MCP client at this command
 uv run digital-brain-mcp
 
-# End-to-end agent: drives all 12 tools over a real stdio MCP session
+# End-to-end agent: drives 12 of the 15 tools over a real stdio MCP session
 uv run python examples/mcp_agent.py
 ```
 
@@ -90,6 +92,23 @@ The agent's reasoning step is a pluggable `Model`. It uses a **real LLM automati
 `ANTHROPIC_API_KEY` is set and the SDK is installed (`uv add anthropic`); otherwise it falls back
 to a deterministic scaffold-follower. Either way the MCP transport, tool dispatch, cognitive loop,
 and guardrail retry are real.
+
+### Web UI (local)
+
+A React + Vite console (`ui/`) that drives the live engine over the HTTP bridge — the visual way to
+see the thought cycle, the living memory map, the Constitution check, and the plasticity graph.
+Needs Node.js in addition to the Python prerequisites.
+
+```bash
+# terminal 1 — the live engine over HTTP (defaults to 127.0.0.1:8787)
+uv run digital-brain-http
+
+# terminal 2 — the UI dev server (proxies /api → the bridge above)
+cd ui && npm install && npm run dev            # open the printed localhost URL
+
+# point the UI at a deployed backend instead of a local bridge:
+VITE_API_TARGET=https://<backend-host> npm run dev
+```
 
 ### Use it live from Claude Code / Claude Desktop (recommended)
 
@@ -126,6 +145,25 @@ require approval; restart Claude Code if it doesn't appear). The tools show up a
 0 3 * * *  cd /path/to/digital-brain && /path/to/uv run brain sleep >> ~/.digital-brain-sleep.log 2>&1
 ```
 
+## Deployment (public demo)
+
+The web app is deployed as two pieces, configured as code in this repo:
+
+- **Backend** — the HTTP bridge in a container (`Dockerfile`, `railway.json`) on **Railway**, over a
+  managed Postgres + pgvector. `_ensure_seeded` creates the extension/schema and seeds both demo
+  brains once on an empty database; `/health` is the uptime probe (and reports the live commit sha).
+- **Frontend** — the built UI on **Vercel** (`vercel.json`), which rewrites `/api/*` to the Railway
+  backend (`https://digital-brain-api-production.up.railway.app`).
+
+**Per-visitor sandbox (the public-safety model).** The demo is a single shared engine, so every
+visitor gets a private clone of the demo brains under a `<canonical>#<sid>` namespace. The browser
+mints a random session id (`X-Session` header); the server **forces every request into the caller's
+own namespace**, so nobody can read or modify another visitor's brains (or the pristine template).
+First contact lazily clones the template; idle sandboxes are swept on a 6-hour TTL. In-process
+sliding-window **rate limiting** (per-session + global heavy-op caps + a provisioning cap) protects
+the shared instance. Reset is scoped to the caller's own sandbox — `scope='brain'` resets just the
+selected domain's chain (keeping the shared base and the other domain), `scope='all'` resets both.
+
 ## Layout
 
 ```
@@ -140,12 +178,18 @@ src/digital_brain/
   seed_legal.py    # 2nd domain: contract-review brain, sharing the same base
   cli.py           # `brain` CLI
   mcp_server.py    # MCP tool surface (15 tools)
+  http_server.py   # HTTP bridge (Starlette) for the web UI: per-visitor sandbox + rate limiting
+ui/                # React + Vite web console (drives the live engine over the bridge)
+  src/App.tsx      # the app; src/lib/api.ts (typed client), src/components/* (BrainCore, graph, …)
 demo.py            # runs all 5 MVP success criteria
 examples/
-  mcp_agent.py     # drives all 12 tools over a real stdio MCP session (pluggable model)
+  mcp_agent.py     # drives 12 of the 15 tools over a real stdio MCP session (pluggable model)
+Dockerfile · railway.json · vercel.json   # deploy config-as-code (Railway backend + Vercel frontend)
 ```
 
 ## Status
 
-MVP complete and verified: all five success criteria pass (`uv run python demo.py`).
-This is decision *support* on synthetic data — not for clinical use.
+MVP complete and verified: all five success criteria pass (`uv run python demo.py`). Beyond the MVP
+it now ships a **React web console** over an HTTP bridge and runs as a **public demo** (Railway +
+Vercel) with per-visitor sandbox isolation and rate limiting. This is decision *support* on synthetic
+data — not for clinical use.

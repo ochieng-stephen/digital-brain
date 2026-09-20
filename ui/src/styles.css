@@ -1205,6 +1205,19 @@ textarea {
   opacity: 0.4;
   cursor: not-allowed;
 }
+/* Think = the primary action → accent-filled at rest (what used to be only its hover), so it reads
+   as primary immediately. Only when enabled; disabled stays the quiet neutral state. Clear stays a
+   ghost. Hover lifts it a touch further. */
+.console .btn:not(.ghost):not(:disabled) {
+  border-color: transparent;
+  background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
+  color: #fff;
+  box-shadow: 0 8px 22px -8px color-mix(in oklab, var(--accent-a) 60%, transparent);
+}
+.console .btn:not(.ghost):not(:disabled):hover {
+  box-shadow: 0 11px 26px -8px color-mix(in oklab, var(--accent-a) 78%, transparent);
+  filter: brightness(1.05);
+}
 .console-hint {
   margin: 8px 4px 0;
   font-size: 11.5px;
@@ -2210,7 +2223,12 @@ textarea {
   transition: all 0.2s var(--ease);
 }
 .danger-btn:hover {
-  background: color-mix(in oklab, var(--bad) 8%, transparent);
+  /* override .btn:hover, which would force white text + an accent-coloured shadow (unreadable on the
+     faint fill). Keep the outline-danger look: readable red text on a soft red tint. */
+  border-color: color-mix(in oklab, var(--bad) 55%, var(--hair));
+  background: color-mix(in oklab, var(--bad) 12%, transparent);
+  color: var(--bad);
+  box-shadow: none;
 }
 .danger-solid {
   border-color: transparent;
@@ -2415,15 +2433,7 @@ textarea {
   } /* Clear */
   .console .btn:not(.ghost) {
     order: 4;
-  } /* Think */
-  /* Think = filled primary on the phone — there's no hover to reveal it otherwise, so the
-     two buttons would read identically. Only when enabled; disabled stays the quiet state. */
-  .console .btn:not(.ghost):not(:disabled) {
-    border-color: transparent;
-    background: linear-gradient(140deg, var(--accent-a), var(--accent-b));
-    color: #fff;
-    box-shadow: 0 8px 22px -8px color-mix(in oklab, var(--accent-a) 55%, transparent);
-  }
+  } /* Think — accent fill comes from the global rule now */
 
   /* comfortable outer insets so cards aren't edge-to-edge; even rhythm between the
      now-flattened sections (workspace-main/stage gaps are gone with display:contents) */
